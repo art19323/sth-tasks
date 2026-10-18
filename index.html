@@ -55,6 +55,7 @@ button{cursor:pointer}
 .actions select{font-size:12.5px;padding:6px 8px;max-width:150px}
 .icon{background:none;border:none;color:#6b6b78;font-size:16px;padding:4px 4px;cursor:pointer;line-height:1}
 .icon:hover{color:var(--txt)}
+.icon.del-confirm{color:#ff6b81;font-size:12px;border:1px solid rgba(255,45,85,.5);border-radius:8px;padding:4px 8px;white-space:nowrap}
 .empty{color:var(--dim);text-align:center;padding:34px 10px;font-size:14px}
 .form{display:none;flex-direction:column;gap:10px}
 .form.open{display:flex}
@@ -200,6 +201,7 @@ const FILE_NAME = "sth-tasks-state.json";
 let state = null;
 let filters = {member:"all", status:"active", type:"all", q:""};
 let editingId = null;
+let pendingDelete = null;
 let remoteStamp = null;
 let saveTimer = null;
 
@@ -402,7 +404,9 @@ function renderList(){
       '<div class="actions">' +
         '<select data-act="assign">' + opts + "</select>" +
         '<button class="icon" data-act="edit" title="Изменить">✎</button>' +
-        '<button class="icon" data-act="del" title="Удалить">✕</button>' +
+        (pendingDelete === t.id
+          ? '<button class="icon del-confirm" data-act="del" title="Нажми ещё раз">удалить?</button>'
+          : '<button class="icon" data-act="del" title="Удалить">✕</button>') +
       "</div>" +
     "</div>";
   }).join("");
@@ -444,9 +448,13 @@ function assignTask(id, memberId){
 }
 
 function deleteTask(id){
-  const t = state.tasks.find(x => x.id === id);
-  if(!t) return;
-  if(!window.confirm("Удалить задачу «" + t.title + "»?")) return;
+  if(pendingDelete !== id){
+    pendingDelete = id;
+    renderList();
+    setTimeout(() => { if(pendingDelete === id){ pendingDelete = null; renderList(); } }, 4000);
+    return;
+  }
+  pendingDelete = null;
   state.tasks = state.tasks.filter(x => x.id !== id);
   touch();
 }
