@@ -104,6 +104,10 @@ details[open] summary{margin-bottom:10px}
         <div class="lbl">Статус</div>
         <div class="row" id="statusChips"></div>
       </div>
+      <div>
+        <div class="lbl">Приоритет</div>
+        <div class="row" id="priorityChips"></div>
+      </div>
       <div class="row">
         <select id="typeFilter" class="search" style="flex:0 0 auto"></select>
         <input id="search" class="search" placeholder="Поиск по названию, треку, заметке">
@@ -199,7 +203,7 @@ const GIST_KEY = "sth_tasks_gist_id";
 const FILE_NAME = "sth-tasks-state.json";
 
 let state = null;
-let filters = {member:"all", status:"active", type:"all", q:""};
+let filters = {member:"all", status:"active", priority:"all", type:"all", q:""};
 let editingId = null;
 let pendingDelete = null;
 let remoteStamp = null;
@@ -324,6 +328,19 @@ function renderStatusChips(){
   box.innerHTML = opts.map(o => '<div class="chip' + (filters.status === o.id ? " on" : "") + '" data-status="' + o.id + '">' + o.title + "</div>").join("");
 }
 
+function renderPriorityChips(){
+  const box = document.getElementById("priorityChips");
+  const counts = {high:0, normal:0, low:0};
+  state.tasks.forEach(t => { if(t.status !== "done" && t.status !== "dropped") counts[t.priority || "normal"]++; });
+  const opts = [
+    {id:"all", title:"Любой", n:counts.high + counts.normal + counts.low},
+    {id:"high", title:"Высокий", n:counts.high},
+    {id:"normal", title:"Обычный", n:counts.normal},
+    {id:"low", title:"Низкий", n:counts.low}
+  ];
+  box.innerHTML = opts.map(o => '<div class="chip' + (filters.priority === o.id ? " on" : "") + '" data-priority="' + o.id + '">' + o.title + '<span class="n">' + o.n + "</span></div>").join("");
+}
+
 function fillSelects(){
   const tf = document.getElementById("typeFilter");
   tf.innerHTML = '<option value="all">Все типы</option>' + TYPES.map(t => '<option value="' + t.id + '">' + t.title + "</option>").join("");
@@ -354,6 +371,7 @@ function matches(t){
   if(filters.status === "active"){ if(t.status === "done" || t.status === "dropped") return false; }
   else if(filters.status === "done"){ if(t.status !== "done") return false; }
   else if(filters.status !== "all"){ if(t.status !== filters.status) return false; }
+  if(filters.priority !== "all" && (t.priority || "normal") !== filters.priority) return false;
   if(filters.type !== "all" && t.type !== filters.type) return false;
   if(filters.q){
     const q = filters.q.toLowerCase();
@@ -389,7 +407,8 @@ function renderList(){
     if(t.type) meta.push('<span class="badge">' + typeTitle(t.type) + "</span>");
     if(t.track) meta.push('<span class="badge trk">' + esc(t.track) + "</span>");
     if(t.due) meta.push('<span class="badge ' + (late ? "late" : "due") + '">' + fmtDate(t.due) + (late ? " · просрочено" : "") + "</span>");
-    if(t.priority === "high") meta.push('<span class="badge hi">Важно</span>');
+    if(t.priority === "high") meta.push('<span class="badge hi">Высокий</span>');
+    else if(t.priority === "low") meta.push('<span class="badge">Низкий</span>');
     if(t.status === "waiting") meta.push('<span class="badge">Ждём не меня</span>');
     if(t.parentTitle) meta.push('<span class="badge">↳ к «' + esc(t.parentTitle) + "»</span>");
     const opts = '<option value="">Не назначено</option>' + state.members.map(m =>
@@ -416,6 +435,7 @@ function render(){
   renderStats();
   renderMemberChips();
   renderStatusChips();
+  renderPriorityChips();
   document.getElementById("typeFilter").value = filters.type;
   renderList();
 }
@@ -662,6 +682,13 @@ function init(){
     const chip = e.target.closest("[data-status]");
     if(!chip) return;
     filters.status = chip.dataset.status;
+    render();
+  });
+
+  document.getElementById("priorityChips").addEventListener("click", e => {
+    const chip = e.target.closest("[data-priority]");
+    if(!chip) return;
+    filters.priority = chip.dataset.priority;
     render();
   });
 
