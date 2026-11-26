@@ -8,7 +8,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="theme-color" content="#101014">
+<meta name="theme-color" id="themeColor" content="#0d0d10">
+<script>try{if(localStorage.getItem("sth_theme")==="light"){document.documentElement.setAttribute("data-theme","light");document.getElementById("themeColor").setAttribute("content","#f4f5f7");}}catch(e){}</script>
 <style>
 :root{--bg:#0d0d10;--card:#17171c;--card2:#1e1e25;--line:#2a2a33;--txt:#ececf1;--dim:#8b8b98;--acc:#ff2d55;--ok:#3ddc84;--warn:#ffb020}
 *{box-sizing:border-box}
@@ -16,6 +17,10 @@ body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 -apple-system,
 .wrap{max-width:980px;margin:0 auto;padding:26px 16px 90px}
 h1{font-size:26px;letter-spacing:-.4px;margin:0 0 4px}
 .sub{color:var(--dim);font-size:13px;margin-bottom:18px}
+.subrow{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:18px}
+.subrow .sub{margin-bottom:0}
+.theme-btn{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:6px 11px;font-size:14px;line-height:1;color:var(--txt);cursor:pointer}
+.theme-btn:hover{border-color:#4a4a57}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
 .stat .v{font-size:22px;font-weight:600;line-height:1.2}
@@ -75,6 +80,26 @@ button{cursor:pointer}
 details summary{cursor:pointer;color:var(--dim);font-size:13px;padding:4px 0}
 details[open] summary{margin-bottom:10px}
 .member-add{display:flex;gap:8px;margin-top:10px}
+[data-theme="light"]{
+  --bg:#f4f5f7;--card:#ffffff;--card2:#eff0f4;--line:#e2e3ea;--txt:#16161c;--dim:#6a6a76;--acc:#e11d48;--ok:#12a150;--warn:#b26b00
+}
+[data-theme="light"] .chip{color:#3a3a44}
+[data-theme="light"] .chip:hover{border-color:#c2c3cc}
+[data-theme="light"] .chip.on{color:#c81e44;background:rgba(225,29,72,.08)}
+[data-theme="light"] input:focus,[data-theme="light"] select:focus,[data-theme="light"] textarea:focus{border-color:#b9bac4}
+[data-theme="light"] input::placeholder,[data-theme="light"] textarea::placeholder{color:#9a9aa6}
+[data-theme="light"] .btn.ghost,[data-theme="light"] .theme-btn{color:#3a3a44}
+[data-theme="light"] .cb{border-color:#c6c7d0}
+[data-theme="light"] .cb.on{color:#fff}
+[data-theme="light"] .task.done .title{text-decoration-color:#a0a0aa}
+[data-theme="light"] .badge.hi{color:#c81e44}
+[data-theme="light"] .badge.due{color:#8a5a00}
+[data-theme="light"] .badge.late{color:#c81e44}
+[data-theme="light"] .badge.trk{color:#0b62a8}
+[data-theme="light"] .icon{color:#8a8a96}
+[data-theme="light"] .icon.del-confirm,[data-theme="light"] .sync.err{color:#c81e44}
+[data-theme="light"] .task.overdue{box-shadow:inset 0 0 0 2px rgba(225,29,72,.35)}
+[data-theme="light"] .task.overdue:not(.owned){border-color:rgba(225,29,72,.45)}
 @media(max-width:640px){
   .wrap{padding:20px 12px 80px}
   .stats{grid-template-columns:repeat(2,1fr);gap:8px}
@@ -92,7 +117,10 @@ details[open] summary{margin-bottom:10px}
 <body>
 <div class="wrap">
   <h1>Задачи Set To Hate</h1>
-  <div class="sub" id="updated">Загрузка…</div>
+  <div class="subrow">
+    <div class="sub" id="updated">Загрузка…</div>
+    <button class="theme-btn" id="themeBtn" type="button" title="Светлая тема">☀️</button>
+  </div>
 
   <div class="stats">
     <div class="stat"><div class="v" id="st-total">0</div><div class="l">Всего</div></div>
@@ -683,7 +711,25 @@ function importJson(file){
 
 /* ---------- wiring ---------- */
 
+/* ---------- theme ---------- */
+
+const THEME_KEY = "sth_theme";
+function currentTheme(){ return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark"; }
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  const meta = document.querySelector("meta[name=theme-color]");
+  if(meta) meta.setAttribute("content", t === "light" ? "#f4f5f7" : "#0d0d10");
+  const b = document.getElementById("themeBtn");
+  if(b){
+    b.textContent = t === "light" ? "🌙" : "☀️";
+    b.title = t === "light" ? "Тёмная тема" : "Светлая тема";
+  }
+  try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
+}
+function toggleTheme(){ applyTheme(currentTheme() === "light" ? "dark" : "light"); }
+
 function init(){
+  applyTheme(currentTheme());
   load();
   fillSelects();
   render();
@@ -693,6 +739,8 @@ function init(){
     setSyncStatus("Доступ сохранён в этом браузере. Загружаю облако…");
     pullGist(false);
   }
+
+  document.getElementById("themeBtn").addEventListener("click", toggleTheme);
 
   document.getElementById("memberChips").addEventListener("click", e => {
     const chip = e.target.closest("[data-member]");
