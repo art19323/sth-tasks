@@ -252,8 +252,8 @@ function defaultState(){
   return {
     app:"sth-tasks", version:1, updatedAt:nowISO(),
     members:[
-      {id:"artem", name:"Артём", color:COLORS[0]},
-      {id:"sasha", name:"Саша", color:COLORS[1]},
+      {id:"artem", name:"Артём", color:COLORS[1]},
+      {id:"sasha", name:"Саша", color:COLORS[0]},
       {id:"andrey", name:"Андрей", color:COLORS[2]},
       {id:"max", name:"Макс", color:COLORS[3]}
     ],
@@ -296,6 +296,13 @@ function migrate(d){
     if(!t.createdAt) t.createdAt = nowISO();
     if(!t.updatedAt) t.updatedAt = t.createdAt;
   });
+  if(!d.colorSwap){
+    d.members.forEach(m => {
+      if(m.id === "artem") m.color = COLORS[1];
+      if(m.id === "sasha") m.color = COLORS[0];
+    });
+    d.colorSwap = 1;
+  }
   d.version = 1;
   d.app = "sth-tasks";
   return d;
