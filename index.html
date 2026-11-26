@@ -310,14 +310,21 @@ function renderStats(){
 function renderMemberChips(){
   const box = document.getElementById("memberChips");
   const counts = {};
-  state.tasks.forEach(t => { const k = t.assignee || ""; counts[k] = (counts[k]||0) + 1; });
-  let html = '<div class="chip' + (filters.member === "all" ? " on" : "") + '" data-member="all">Все<span class="n">' + state.tasks.length + "</span></div>";
+  let active = 0;
+  state.tasks.forEach(t => {
+    if(t.status === "done" || t.status === "dropped") return;
+    active++;
+    const k = t.assignee || "";
+    counts[k] = (counts[k]||0) + 1;
+  });
+  const num = n => n > 0 ? '<span class="n">' + n + "</span>" : "";
+  let html = '<div class="chip' + (filters.member === "all" ? " on" : "") + '" data-member="all">Все' + num(active) + "</div>";
   state.members.forEach(m => {
     html += '<div class="chip' + (filters.member === m.id ? " on" : "") + '" data-member="' + m.id + '">' +
             '<span class="person"><span class="dot" style="background:' + m.color + '"></span>' + m.name + "</span>" +
-            '<span class="n">' + (counts[m.id]||0) + "</span></div>";
+            num(counts[m.id]||0) + "</div>";
   });
-  if(counts[""]) html += '<div class="chip' + (filters.member === "none" ? " on" : "") + '" data-member="none">Без ответственного<span class="n">' + counts[""] + "</span></div>";
+  if(counts[""]) html += '<div class="chip' + (filters.member === "none" ? " on" : "") + '" data-member="none">Без ответственного' + num(counts[""]) + "</div>";
   box.innerHTML = html;
 }
 
