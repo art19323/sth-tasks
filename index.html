@@ -40,7 +40,7 @@ button{cursor:pointer}
 .lbl{font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
 #list{display:flex;flex-direction:column;gap:10px}
 .task{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;display:flex;gap:12px;align-items:flex-start}
-.task.owned{border-color:var(--mcline);border-left:3px solid var(--mc)}
+.task.owned{background:var(--mcfill)}
 .task.done{opacity:.55}
 .task.overdue{box-shadow:inset 0 0 0 2px rgba(255,45,85,.32)}
 .task.overdue:not(.owned){border-color:rgba(255,45,85,.5)}
@@ -435,7 +435,7 @@ function renderList(){
     const opts = '<option value="">Не назначено</option>' + state.members.map(m =>
       '<option value="' + m.id + '"' + (t.assignee === m.id ? " selected" : "") + ">" + m.name + "</option>").join("");
     const mc = t.assignee ? memberColor(t.assignee) : "";
-    const ownerAttr = mc ? ' class="task' + (done ? " done" : "") + (late ? " overdue" : "") + ' owned" style="--mc:' + mc + ";--mcline:" + rgbaOf(mc, .55) + '"' : ' class="task' + (done ? " done" : "") + (late ? " overdue" : "") + '"';
+    const ownerAttr = ' class="task' + (done ? " done" : "") + (late ? " overdue" : "") + (mc ? ' owned" style="--mcfill:' + rgbaOf(mc, .13) + '"' : '"');
     return '<div' + ownerAttr + ' data-id="' + t.id + '">' +
       '<div class="cb' + (done ? " on" : "") + '" data-act="toggle" title="Отметить выполнение"><span>' + (done ? "✓" : "") + "</span></div>" +
       '<div class="body">' +
