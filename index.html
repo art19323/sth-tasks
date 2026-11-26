@@ -139,10 +139,6 @@ details[open] summary{margin-bottom:10px}
         <div class="lbl">Статус</div>
         <div class="row" id="statusChips"></div>
       </div>
-      <div>
-        <div class="lbl">Приоритет</div>
-        <div class="row" id="priorityChips"></div>
-      </div>
       <div class="row">
         <select id="typeFilter" class="search" style="flex:0 0 auto"></select>
         <input id="search" class="search" placeholder="Поиск по названию, треку, заметке">
@@ -384,19 +380,6 @@ function renderStatusChips(){
   box.innerHTML = opts.map(o => '<div class="chip' + (filters.status === o.id ? " on" : "") + '" data-status="' + o.id + '">' + o.title + "</div>").join("");
 }
 
-function renderPriorityChips(){
-  const box = document.getElementById("priorityChips");
-  const counts = {high:0, normal:0, low:0};
-  state.tasks.forEach(t => { if(t.status !== "done" && t.status !== "dropped") counts[t.priority || "normal"]++; });
-  const opts = [
-    {id:"all", title:"Любой", n:counts.high + counts.normal + counts.low},
-    {id:"high", title:"Высокий", n:counts.high},
-    {id:"normal", title:"Обычный", n:counts.normal},
-    {id:"low", title:"Низкий", n:counts.low}
-  ];
-  box.innerHTML = opts.map(o => '<div class="chip' + (filters.priority === o.id ? " on" : "") + '" data-priority="' + o.id + '">' + o.title + '<span class="n">' + o.n + "</span></div>").join("");
-}
-
 function fillSelects(){
   const tf = document.getElementById("typeFilter");
   tf.innerHTML = '<option value="all">Все типы</option>' + TYPES.map(t => '<option value="' + t.id + '">' + t.title + "</option>").join("");
@@ -493,7 +476,6 @@ function render(){
   renderStats();
   renderMemberChips();
   renderStatusChips();
-  renderPriorityChips();
   document.getElementById("typeFilter").value = filters.type;
   renderList();
 }
@@ -760,13 +742,6 @@ function init(){
     const chip = e.target.closest("[data-status]");
     if(!chip) return;
     filters.status = chip.dataset.status;
-    render();
-  });
-
-  document.getElementById("priorityChips").addEventListener("click", e => {
-    const chip = e.target.closest("[data-priority]");
-    if(!chip) return;
-    filters.priority = chip.dataset.priority;
     render();
   });
 
